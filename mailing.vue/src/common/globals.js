@@ -1,5 +1,6 @@
 export const USUARIO_STORAGE = "Vm@1l1ng";
 export const URL_API = "http://localhost:9000/";
+// export const URL_API = "http://186.145.16.130:9000/";
 export const APPNAME = "Mailer";
 export const COMPANYNAME = "EbertLabs";
 export const YEARSCOPYRIGTH = "2018";

@@ -99,7 +99,7 @@ try {
                 return res.status('500').send(JSON.stringify({ success: false, error: err.message })).end();
             } else {
                 console.log(`${settings.urlDirArchivos}${req.user.usuarioid}\\${req.params.directory}`);
-                rimraf(`${settings.urlDirArchivos}${req.user.usuarioid}\\${req.params.directory}`, function () { 
+                rimraf(`${settings.urlDirArchivos}${req.user.usuarioid}\\${req.params.directory}`, function () {
                     // console.log('done'); 
                     return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: data })).end();
                 });
@@ -109,20 +109,13 @@ try {
 
     router.post('/enviar_mails', function (req, res) {
         var model = JSON.parse(req.body.json).model;
-        console.log(model)
-        // m.cambiar(req.cp, model, function (data, err) {
-        //     if (err) {
-        //         return res.status('500').send(JSON.stringify({ success: false, error: err.message })).end();
-        //     } else {
-        //         return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: data })).end();
-        //     }
-        // });
-        var params={correo: model.cuenta};
-        correo_model.seleccionar(req.cp, params,function(data,err){
+        var params = { email: model.cuenta };
+        correo_model.seleccionar(req.cp, params, function (data, err) {
             if (err) {
                 return res.status('500').send(JSON.stringify({ success: false, error: err.message })).end();
             } else {
-                var mailer=data.recordset[0];
+                // console.log(data);
+                var mailer = data.recordset[0];
                 var mailerConfig = {
                     service: mailer.servicio,
                     from: `"${mailer.nombre}" <${mailer.email}>`,
@@ -135,60 +128,84 @@ try {
                         pass: mailer.clave
                     }
                 };
-                console.log(mailerConfig)
+
+
+                // console.log(mailerConfig)
                 // var i = 0;
-                var terceros=model.destinatarios;
+                var terceros = model.destinatarios;
+                var errorEnEnvio = undefined;
                 for (var i = terceros.length - 1; i >= 0; i--) {
-                    var tercero=terceros[i]['tercero'];
-                    var archivo=terceros[i]['archivo'];
+                    if (!errorEnEnvio) {
+                        // #region Construir el correo
+                        var tercero = terceros[i]['tercero'];
+                        var archivo = terceros[i]['archivo'];
 
-                    // console.log(`Tercero #${i}:`,  tercero);
-                    // console.log(`Archivo #${i}:`,  archivo);
-                    var to = `"${tercero.razonsocial.toLowerCase().replace(/(^|\s)[a-z]/g, function (a) { return a.toUpperCase(); })}" <${tercero.email1}>`;
-                    if(tercero.email2 && tercero.email2!==''){
-                        to += `, "${tercero.razonsocial.toLowerCase().replace(/(^|\s)[a-z]/g, function (a) { return a.toUpperCase(); })}" <${tercero.email2}>`;
-                    }
-                    if(tercero.email3 && tercero.email3!==''){
-                        to += `, "${tercero.razonsocial.toLowerCase().replace(/(^|\s)[a-z]/g, function (a) { return a.toUpperCase(); })}" <${tercero.email3}>`;
-                    }
-                    if(tercero.email4 && tercero.email4!==''){
-                        to += `, "${tercero.razonsocial.toLowerCase().replace(/(^|\s)[a-z]/g, function (a) { return a.toUpperCase(); })}" <${tercero.email4}>`;
-                    }
-                    // console.log(to);
-                    var mailOptions = {
-                        from: mailerConfig.from,
-                        to: to,
-                        subject: `Su Recibo de Condominio de Centro Médico Maracay`,
-                        html: `Estimado <b>${tercero.razonsocial.toLowerCase().replace(/(^|\s)[a-z]/g, function (a) { return a.toUpperCase(); })}</b>, adjunto a su correo esta su recibo de condonminio de Centro Médico Maracay`,
-                        text: `Estimado ${tercero.razonsocial.toLowerCase().replace(/(^|\s)[a-z]/g, function (a) { return a.toUpperCase(); })}, adjunto a su correo esta su recibo de condonminio de Centro Médico Maracay`,
-                        // attachments: [{path: `${settings.urlDirArchivos}${req.user.usuarioid}\\${archivo.directory}\\${archivo.name}`}]
-                    };
-                    console.log(mailOptions);
-                    mailer = require('../core/mailer.js');
-                    mailer.sendmail(mailOptions, function (data, err) {
-                        if (err) {
-                            console.log(err)
-                            return res.status('500').send(JSON.stringify({ success: false, error: err })).end();
-                        } else {
-                            // return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: true })).end();
-                            if(i===0){
-                                return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: true })).end();
-                            }
+                        // console.log(`Tercero #${i}:`,  tercero);
+                        // console.log(`Archivo #${i}:`,  archivo);
+                        var razon_social = tercero.razonsocial.toLowerCase().replace(/(^|\s)[a-z]/g, function (a) { return a.toUpperCase(); });
+                        var to = `"${razon_social}" <${tercero.email1}>`;
+                        if (tercero.email2 && tercero.email2 !== '') {
+                            to += `, "${razon_social}" <${tercero.email2}>`;
                         }
-                    });
+                        if (tercero.email3 && tercero.email3 !== '') {
+                            to += `, "${razon_social}" <${tercero.email3}>`;
+                        }
+                        if (tercero.email4 && tercero.email4 !== '') {
+                            to += `, "${razon_social}" <${tercero.email4}>`;
+                        }
+                        // console.log(to);
+                        var mailOptions = {
+                            from: mailerConfig.from,
+                            to: to,
+                            subject: `Su Recibo de Condominio de Centro Médico Maracay`,
+                            html: `Estimado <b>${razon_social}</b>, adjunto a su correo esta su recibo de condonminio de Centro Médico Maracay`,
+                            text: `Estimado ${razon_social}, adjunto a su correo esta su recibo de condonminio de Centro Médico Maracay`,
+                            attachments: [
+                                {
+                                    path: `${settings.urlDirArchivos}${req.user.usuarioid}\\${archivo.directory}\\${archivo.name}`,
+                                    filename: archivo.name,
+                                }
+                            ]
+                        };
+                        // console.log(mailOptions);
+                        // #endregion
 
-
+                        // #region Envío del Correo
+                        mailer = require('../core/mailer.js');
+                        mailer.enviarCorreo(mailerConfig, mailOptions, function (data, err) {
+                            if (err) {
+                                console.log(err)
+                                errorEnEnvio = err;
+                                return res.status('500').send(JSON.stringify({ success: false, error: err })).end();
+                            } else {
+                                // #region Envio de Mensajes de Texto
+                                var numero = '+573022172231';
+                                var sms = `Buen día ${razon_social}, le notificamos que hemos enviado su recibo de condominio de CMM a su correo.`;
+                                var Client = require('node-rest-client').Client;
+                                var client = new Client();
+                                client.get(`https://gentle-reaches-57765.herokuapp.com/sms/o.irjuqx6PMiG9wNB98dq8eNslUDBHyYDX/ujCMTIEos68/ujCMTIEos68sjAiVsKnSTs/${numero}/${sms}`, function (data, response) {
+                                    // console.log(data);
+                                    // console.log(response);
+                                });
+                                // #endregion
+                                // console.log(i)
+                                // return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: true })).end();
+                                if (i <= 0) {
+                                    // console.log("Complete")
+                                    return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: true })).end();
+                                }
+                            }
+                        });
+                        // #endregion
+                    }
                 }
-
-                // console.log(mailOptions);
-
                 // return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: true })).end();
             }
-            
+
         })
     });
 
-app.use("/archivos/", router);
+    app.use("/archivos/", router);
 
 } catch (ex) {
     throw ex;

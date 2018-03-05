@@ -132,8 +132,8 @@ try {
             //     sqlString += ", @fecha_registro = @_fecha_registro";
             // }
             //#endregion
-            console.log(inputs);
-            console.log(sqlString)
+            // console.log(inputs);
+            // console.log(sqlString)
             db.execute(cp, sqlString, inputs, undefined, function (data, err) {
                 if (err) return done(null, err);
                 return done(data);

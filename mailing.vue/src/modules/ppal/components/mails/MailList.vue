@@ -22,7 +22,7 @@
                 <div class="form-body">
                   <div class="form-group">
                     <label class="control-label">Cuenta de correo remitente</label>
-                    <select class="form-control" v-model="correo" v-focus>
+                    <select class="form-control" v-model="correo" v-focus v-on:change="directorio=(correo==='')?'':directorio">
                       <option value="">Elija una cuenta de correo</option>
                       <option :value="item.email" v-for="(item, index) in correos" :key="index">{{item.email}}</option>
                     </select>
@@ -61,9 +61,17 @@
                             <td>
                               <!-- <div class="form-group has-error" :class="{'has-error': terceroElegido(item.archivoid)}"> -->
                                 <div class="form-group">
-                                  <select class="form-control" :ref="item.archivoid" :id="item.archivoid" v-on:change="validar">
+                                  <select class="form-control tercero" :ref="item.archivoid" :id="item.archivoid" v-on:change="valido=false">
                                     <option value="">Elegir</option>
-                                    <option :value="ter.terceroid" v-for="(ter, i) in terceros" :key="i" :selected="item.name.toLowerCase().indexOf(ter.terceroid.toLowerCase())>-1">{{ter.razonsocial}} ({{ter.terceroid}}) [{{ter.email1}}]</option>
+                                    <option 
+                                      :value="ter.terceroid" 
+                                      v-for="(ter, i) in terceros" :key="i" 
+                                      :selected="item.name.toLowerCase().indexOf(ter.terceroid.toLowerCase())>-1"
+                                      v-once
+                                      >
+                                        {{ter.razonsocial}} ({{ter.terceroid}}) [{{ter.email1}}]
+                                      </option>
+                                    <!-- <option :value="ter.terceroid" v-for="(ter, i) in terceros" :key="i">{{ter.razonsocial}} ({{ter.terceroid}}) [{{ter.email1}}]</option> -->
                                   </select>
                                 </div>
                               </td>
@@ -108,6 +116,7 @@
                     <div class="pull-right">
 
                       <!-- <button type="button" class="btn btn-success btn-lg btn-block" v-show="valido">Enviar Mails</button> -->
+                      <button class="btn btn-primary" type="button" @click.prevent="validar" v-show="!valido" v-if="archivos.length>0">Validar</button>
                       <button class="btn btn-success" type="submit" @click.prevent="enviarMails" v-show="valido">Enviar Mails</button>
                     </div>
                     <div class="clearfix"></div>
@@ -131,93 +140,95 @@
   </div>
 </template>
 
-    <script>
-    import { mapActions } from "vuex";
-    export default {
-      data() {
-        return {
-          cargando: false,
-          lotes: [],
-          directorio: "",
-          archivos: [],
-          terceros: [],
-          correos: [],
-          correo: "",
-          valido: false,
-          confirmar_eliminacion: false
-        };
-      },
-      mounted() {
-        this.cargando = true;
-        this.$http
-        .get(`archivos/lotes`)
-        .then(res => {
+<script>
+import { mapActions } from "vuex";
+export default {
+  data() {
+    return {
+      cargando: false,
+      lotes: [],
+      directorio: "",
+      archivos: [],
+      terceros: [],
+      correos: [],
+      correo: "",
+      valido: false,
+      confirmar_eliminacion: false
+    };
+  },
+  mounted() {
+    this.cargando = true;
+    this.$http
+      .get(`archivos/lotes`)
+      .then(res => {
         // this.cargando = false;
         this.lotes = res.result.recordset;
         this.$http
-        .get(`tercero/`)
-        .then(res => {
+          .get(`tercero/`)
+          .then(res => {
             // this.cargando = false;
             this.terceros = res.result.recordset;
             // console.log(this.terceros);
 
             this.$http
-            .get(`correo/`)
-            .then(res => {
-              this.cargando = false;
-              this.correos = res.result.recordset;
+              .get(`correo/`)
+              .then(res => {
+                this.cargando = false;
+                this.correos = res.result.recordset;
                 // console.log(res.result.recordset);
               })
-            .catch(err => {
-              this.cargando = false;
-              console.log(err);
-            });
+              .catch(err => {
+                this.cargando = false;
+                console.log(err);
+              });
           })
-        .catch(err => {
-          this.cargando = false;
-          console.log(err);
-        });
-      })
-        .catch(err => {
-          this.cargando = false;
-          console.log(err);
-        });
-
-        this.setCurrent({
-          icon: "fa fa-send",
-          title: "Emails",
-          subtitle: "Envío masivo de emails"
-        });
-        this.setNav([
-      // { text: "Configuración", name: "kcnfPpal" },
-      { text: "Emails", name: "" }
-      ]);
-      },
-      watch: {
-        directorio() {
-          var self = this;
-          self.cargando = true;
-          self.archivos = [];
-          if (self.directorio === "") {
-            return;
-          }
-          self.$http
-          .get(`archivos/${self.directorio}/`)
-          .then(res => {
-            self.cargando = false;
-            self.archivos = res.result.recordset;
-          //   console.log(self.archivos);
-            self.validar();
-        })
           .catch(err => {
-            self.cargando = false;
+            this.cargando = false;
             console.log(err);
           });
-        }
-      },
-      methods: {
-        ...mapActions(["setCurrent", "setNav"]),
-        terceroElegido(archivoid) {
+      })
+      .catch(err => {
+        this.cargando = false;
+        console.log(err);
+      });
+
+    this.setCurrent({
+      icon: "fa fa-send",
+      title: "Emails",
+      subtitle: "Envío masivo de emails"
+    });
+    this.setNav([
+      // { text: "Configuración", name: "kcnfPpal" },
+      { text: "Emails", name: "" }
+    ]);
+  },
+  watch: {
+    directorio() {
+      var self = this;
+      self.cargando = true;
+      self.archivos = [];
+      if (self.directorio === "") {
+        return;
+      }
+      self.$http
+        .get(`archivos/${self.directorio}/`)
+        .then(res => {
+          self.cargando = false;
+          self.archivos = res.result.recordset;
+          //   console.log(self.archivos);
+          self.valido = false;
+          // alert("");
+          self.validar();
+        })
+        .catch(err => {
+          self.cargando = false;
+          console.log(err);
+        });
+    }
+  },
+  methods: {
+    ...mapActions(["setCurrent", "setNav"]),
+    terceroElegido(archivoid) {
       //   console.log(archivoid);
       //   var ter = document.getElementById(archivoid);
       //   console.log(ter);
@@ -225,11 +236,14 @@
     },
     validar() {
       this.valido = true;
+      if (this.archivos.length <= 0) {
+        return (this.valido = false);
+      }
       this.archivos.forEach(archivo => {
+        // console.log(archivo.archivoid + ":", $("#" + archivo.archivoid).val());
         if (this.valido) {
           var terceroid = $("#" + archivo.archivoid).val();
-          //   console.log($("#" + archivo.archivoid).val());
-          if (terceroid === "") {
+          if (!terceroid || terceroid === "") {
             this.valido = false;
           }
         }
@@ -246,12 +260,12 @@
         destinatarios: []
       };
       this.archivos.forEach(archivo => {
-        delete archivo['data'];
+        delete archivo["data"];
         var terceroid = $("#" + archivo.archivoid).val();
         var tercero = this.terceros.filter(element => {
           return element.terceroid.toLowerCase().match(terceroid.toLowerCase());
         });
-        console.log("Tercero:",tercero)
+        console.log("Tercero:", tercero);
         model.destinatarios.push({
           archivo: archivo,
           tercero: tercero[0]
@@ -261,53 +275,59 @@
       console.log("Json: ", json);
       this.cargando = true;
       this.$http
-      .post(`archivos/enviar_mails`, json)
-      .then(res => {
-        this.cargando = false;
-        console.log("Response: ", res);
-        if (!res.success) {
-          return this.$noty.error(
-                                  `Ha ocurrido un problema al enviar los correos, ¡vuelve a intentarlo!`
-                                  );
-        } else {
-          this.$noty.success(`Archivos enviados`);
+        .post(`archivos/enviar_mails`, json)
+        .then(res => {
+          this.cargando = false;
+          console.log("Response: ", res);
+          if (!res.success) {
+            return this.$noty.error(
+              `Ha ocurrido un problema al enviar los correos, ¡vuelve a intentarlo!`
+            );
+          } else {
+            this.$noty.success(`Archivos enviados`);
             // return this.$emit("volver");
           }
         })
-      .catch(err => {
-        this.cargando = false;
-        console.log(err);
-      });
+        .catch(err => {
+          this.cargando = false;
+          console.log(err);
+        });
     },
     descartarLote() {
-      var self=this;
-      console.log(self.directorio);
-      if(self.directorio===''){return;}
-      self.cargando=true;
-      self.$http.delete(`archivos/${self.directorio}`)
-      .then(res=>{
-        console.log(res)
-        self.cargando=true;
-        if(res.success){
-          self.$http
-          .get(`archivos/lotes`)
-          .then(res => {
-            self.lotes = res.result.recordset;
-          }).catch(err=>{
-            console.log(err)      
-          })
-          self.directorio="";
-          self.correo="";
-          self.confirmar_eliminacion=false;
-          self.$noty.success('Lote descartado')
-
-        }else{
-          return self.$noty.error('El registro no ha podido ser descartado, vuelve a intentarlo')
-        }
-      }).catch(err=>{
-        console.log(err)
-        self.cargando=false;
-      });
+      var self = this;
+      // console.log(self.directorio);
+      if (self.directorio === "") {
+        return;
+      }
+      self.cargando = true;
+      self.$http
+        .delete(`archivos/${self.directorio}`)
+        .then(res => {
+          // console.log(res);
+          self.cargando = true;
+          if (res.success) {
+            self.$http
+              .get(`archivos/lotes`)
+              .then(res => {
+                self.lotes = res.result.recordset;
+              })
+              .catch(err => {
+                console.log(err);
+              });
+            self.directorio = "";
+            self.correo = "";
+            self.confirmar_eliminacion = false;
+            self.$noty.success("Lote descartado");
+          } else {
+            return self.$noty.error(
+              "El registro no ha podido ser descartado, vuelve a intentarlo"
+            );
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          self.cargando = false;
+        });
     }
   }
 };

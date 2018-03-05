@@ -73,6 +73,15 @@ try {
     require('./routes');
     // #endregion
 
+    // #region Envio de Mensajes de Texto
+    // var Client = require('node-rest-client').Client;
+    // var client = new Client();
+    // client.get("https://gentle-reaches-57765.herokuapp.com/sms/o.irjuqx6PMiG9wNB98dq8eNslUDBHyYDX/ujCMTIEos68/ujCMTIEos68sjAiVsKnSTs/+573022172231/Pruebas de Desarrollo", function (data, response) {
+    //     console.log(data);
+    //     console.log(response);
+    // });
+    // https://gentle-reaches-57765.herokuapp.com/sms/o.irjuqx6PMiG9wNB98dq8eNslUDBHyYDX/ujCMTIEos68/ujCMTIEos68sjAiVsKnSTs/
+    // #endregion
     // #region Conectar a SQL Server y Montar el Servidor
     cp.connect()
         .then(function () {
