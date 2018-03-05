@@ -1,0 +1,10 @@
+export const USUARIO_STORAGE = "Vm@1l1ng";
+export const URL_API = "http://localhost:9000/";
+export const APPNAME = "Mailer";
+export const COMPANYNAME = "EbertLabs";
+export const YEARSCOPYRIGTH = "2018";
+export const LOGO_WHITE = "src/assets/logo_white.png";
+export const LOGO = "src/assets/logo.png";
+export const WEBPAGE = "http://intellview.com.ve/";
+export const VERSION = "1.0";
+// export const APPNAMESMALL = "$+";
