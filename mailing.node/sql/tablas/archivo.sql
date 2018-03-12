@@ -9,7 +9,8 @@ CREATE TABLE dbo.archivo
     [mimetype] varchar(100) not null,
     terceroid varchar(20) default null,
     directory varchar(1000) not null,
-    usuarioid varchar(100) not null
+    usuarioid varchar(100) not null,
+    enviado bit DEFAULT 0
 )
 GO
 ALTER TABLE dbo.archivo ADD CONSTRAINT archivo_archivoid PRIMARY KEY CLUSTERED (archivoid ASC)

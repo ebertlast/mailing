@@ -65,6 +65,10 @@ try {
                 inputs.push({ nombre: '_usuarioid', tipo: 'VARCHAR', tamanio: 100, valor: params.usuarioid });
                 sqlString += ", @usuarioid = @_usuarioid";
             }
+            if (params.enviado) {
+                inputs.push({ nombre: '_enviado', tipo: 'bit', tamanio: 1, valor: params.enviado });
+                sqlString += ", @enviado = @_enviado";
+            }
             //#endregion
 
             db.execute(cp, sqlString, inputs, undefined, function (data, err) {
@@ -115,6 +119,10 @@ try {
             if (params.usuarioid) {
                 inputs.push({ nombre: '_usuarioid', tipo: 'VARCHAR', tamanio: 100, valor: params.usuarioid });
                 sqlString += ", @usuarioid = @_usuarioid";
+            }
+            if (params.enviado) {
+                inputs.push({ nombre: '_enviado', tipo: 'bit', tamanio: 1, valor: params.enviado });
+                sqlString += ", @enviado = @_enviado";
             }
             //#endregion
 
@@ -221,7 +229,7 @@ try {
 
     exports.lotes = function (cp, usuarioid, done) {
         try {
-            var sqlString = `select usuarioid,directory, count(*) archivos from archivo where usuarioid='${usuarioid}' GROUP by directory, usuarioid`;
+            var sqlString = `select usuarioid,directory, count(*) archivos from archivo where usuarioid='${usuarioid}' and isnull(enviado,0)=0 GROUP by directory, usuarioid`;
 
             db.query(cp, sqlString, function (data, err) {
                 if (err) return done(null, err);

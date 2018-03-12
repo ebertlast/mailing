@@ -13,7 +13,8 @@ CREATE PROCEDURE DBO.spm_abcs_archivo
     @mimetype VARCHAR(100) = NULL,
     @terceroid VARCHAR(20) = NULL,
     @directory VARCHAR(1000) = NULL,
-    @usuarioid VARCHAR(100) = NULL
+    @usuarioid VARCHAR(100) = NULL,
+    @enviado bit = NULL
 )
 WITH
     ENCRYPTION
@@ -63,11 +64,12 @@ BEGIN
         UPDATE archivo SET 
 			usuarioid = CASE WHEN @usuarioid IS NULL THEN usuarioid ELSE @usuarioid END,
 			directory = CASE WHEN @directory IS NULL THEN directory ELSE @directory END,
-			terceroid = CASE WHEN @terceroid IS NULL THEN terceroid ELSE @terceroid END,
+			terceroid = CASE WHEN upper(@terceroid) IS NULL THEN terceroid ELSE upper(@terceroid) END,
 			mimetype = CASE WHEN @mimetype IS NULL THEN mimetype ELSE @mimetype END,
 			encoding = CASE WHEN @encoding IS NULL THEN encoding ELSE @encoding END,
 			data = CASE WHEN @data IS NULL THEN data ELSE @data END,
-			name = CASE WHEN @name IS NULL THEN name ELSE @name END
+			name = CASE WHEN @name IS NULL THEN name ELSE @name END,
+            enviado = CASE WHEN @enviado IS NULL THEN 0 ELSE @enviado END
 		WHERE 
 			archivoid = @archivoid
     END

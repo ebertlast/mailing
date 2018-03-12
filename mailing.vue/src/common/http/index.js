@@ -10,7 +10,7 @@ axios.interceptors.request.use(function (config) {
         config.url = join(URL_API, config.url);
     }
     // alert(config.url);
-    console.log(config.url);
+    // console.log(config.url);
     var token = store.getters.usuario.token || null;
     // console.log(token)
     if (token) {

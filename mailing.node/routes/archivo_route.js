@@ -110,6 +110,8 @@ try {
     router.post('/enviar_mails', function (req, res) {
         var model = JSON.parse(req.body.json).model;
         var params = { email: model.cuenta };
+        // console.log(model);
+        // return res.status('500').send(JSON.stringify({ success: false, error: "Pruebas de Desarrollo" })).end();
         correo_model.seleccionar(req.cp, params, function (data, err) {
             if (err) {
                 return res.status('500').send(JSON.stringify({ success: false, error: err.message })).end();
@@ -140,7 +142,7 @@ try {
                         var tercero = terceros[i]['tercero'];
                         var archivo = terceros[i]['archivo'];
 
-                        // console.log(`Tercero #${i}:`,  tercero);
+                        // console.log(`Tercero #${i}:`, tercero);
                         // console.log(`Archivo #${i}:`,  archivo);
                         var razon_social = tercero.razonsocial.toLowerCase().replace(/(^|\s)[a-z]/g, function (a) { return a.toUpperCase(); });
                         var to = `"${razon_social}" <${tercero.email1}>`;
@@ -157,9 +159,12 @@ try {
                         var mailOptions = {
                             from: mailerConfig.from,
                             to: to,
-                            subject: `Su Recibo de Condominio de Centro Médico Maracay`,
-                            html: `Estimado <b>${razon_social}</b>, adjunto a su correo esta su recibo de condonminio de Centro Médico Maracay`,
-                            text: `Estimado ${razon_social}, adjunto a su correo esta su recibo de condonminio de Centro Médico Maracay`,
+                            // subject: `Su Recibo de Condominio de Centro Médico Maracay`,
+                            // html: `Estimado <b>${razon_social}</b>, adjunto a su correo esta su recibo de condonminio de Centro Médico Maracay`,
+                            // text: `Estimado ${razon_social}, adjunto a su correo esta su recibo de condonminio de Centro Médico Maracay`,
+                            subject: model.cuerpoCorreo.asunto.replace('@RAZONSOCIAL', razon_social),
+                            html: model.cuerpoCorreo.cuerpo.replace('@RAZONSOCIAL', razon_social),
+                            text: model.cuerpoCorreo.cuerpo.replace('@RAZONSOCIAL', razon_social),
                             attachments: [
                                 {
                                     path: `${settings.urlDirArchivos}${req.user.usuarioid}\\${archivo.directory}\\${archivo.name}`,
@@ -178,22 +183,43 @@ try {
                                 errorEnEnvio = err;
                                 return res.status('500').send(JSON.stringify({ success: false, error: err })).end();
                             } else {
+
                                 // #region Envio de Mensajes de Texto
-                                var numero = '+573022172231';
-                                var sms = `Buen día ${razon_social}, le notificamos que hemos enviado su recibo de condominio de CMM a su correo.`;
-                                var Client = require('node-rest-client').Client;
-                                var client = new Client();
-                                client.get(`https://gentle-reaches-57765.herokuapp.com/sms/o.irjuqx6PMiG9wNB98dq8eNslUDBHyYDX/ujCMTIEos68/ujCMTIEos68sjAiVsKnSTs/${numero}/${sms}`, function (data, response) {
-                                    // console.log(data);
-                                    // console.log(response);
-                                });
+                                var numero = tercero.movil1;
+                                // var sms = `Buen día estimado(a) sr(a) ${razon_social}, le notificamos que hemos enviado su recibo de condominio de CMM a su correo.`;
+                                var sms = model.sms.replace('@RAZONSOCIAL', razon_social);
+                                if (sms !== '') {
+                                    var Client = require('node-rest-client').Client;
+                                    var client = new Client();
+                                    client.get(`https://gentle-reaches-57765.herokuapp.com/sms/o.irjuqx6PMiG9wNB98dq8eNslUDBHyYDX/ujCMTIEos68/ujCMTIEos68sjAiVsKnSTs/${numero}/${sms}`, function (data, response) {
+                                        // console.log(data);
+                                        // console.log(response);
+                                    });
+                                }
                                 // #endregion
                                 // console.log(i)
                                 // return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: true })).end();
-                                if (i <= 0) {
-                                    // console.log("Complete")
-                                    return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: true })).end();
-                                }
+
+                                var _model = {
+                                    archivoid: archivo.archivoid,
+                                    terceroid: tercero.terceroid,
+                                    enviado: 1
+                                };
+                                m.cambiar(req.cp, _model, function (data, err) {
+                                    if (err) {
+                                        console.log(err)
+                                        errorEnEnvio = err;
+                                        return res.status('500').send(JSON.stringify({ success: false, error: err })).end();
+                                    }
+                                    if (i <= 0) {
+                                        // console.log("Complete")
+                                        return res.status('200').send(JSON.stringify({ success: true, token: req.token, result: true })).end();
+                                    }
+                                })
+
+
+
+
                             }
                         });
                         // #endregion
